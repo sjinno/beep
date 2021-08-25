@@ -1,9 +1,8 @@
-use super::PathBuf;
-
 use text_colorizer::Colorize;
 
 use std::env;
 use std::fs;
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Arguments {
@@ -32,8 +31,12 @@ pub fn get_args() -> Result<Arguments, anyhow::Error> {
 }
 
 fn parse_args(args: &[String]) -> Result<Arguments, anyhow::Error> {
+    // let file = PathBuf::from("audio/hahn_kikeriki.map3");
+    // let mut path_to_audio = env::current_dir()?;
+    // path_to_audio.push(file);
+
     let path_to_audio = fs::canonicalize(PathBuf::from(&args[0]))?;
-    // println!("{:?}", path_to_audio);
+
     let min = args[1].parse::<u64>()?;
     let sec = if args.len() == 3 {
         Some(args[2].parse::<u64>()?)
@@ -45,6 +48,7 @@ fn parse_args(args: &[String]) -> Result<Arguments, anyhow::Error> {
     } else {
         min * 60
     };
+
     Ok(Arguments {
         path_to_audio,
         seconds,

@@ -1,4 +1,4 @@
-use super::{Arguments, PathBuf};
+use super::Arguments;
 
 use chrono::{Duration as ChronoDuration, NaiveTime};
 use rodio::{self, OutputStreamHandle};
@@ -6,6 +6,7 @@ use rodio::{self, OutputStreamHandle};
 use std::convert::TryInto;
 use std::fs;
 use std::io::{self, Write as IoWrite};
+use std::path::Path;
 use std::thread;
 use std::time::Duration;
 
@@ -15,13 +16,12 @@ pub fn begin(args: &Arguments) {
     countdown(args.seconds);
 
     let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
-    match buzz(&args.path_to_audio, &stream_handle) {
-        Ok(buzz) => buzz,
-        Err(_) => {}
-    }
+    if let Ok(buzz) = buzz(&args.path_to_audio, &stream_handle) {
+        buzz
+    };
 }
 
-fn buzz(path_to_audio: &PathBuf, stream_handle: &OutputStreamHandle) -> AudioFileResult {
+fn buzz(path_to_audio: &Path, stream_handle: &OutputStreamHandle) -> AudioFileResult {
     let file = fs::File::open(path_to_audio)?;
     let sound = stream_handle.play_once(io::BufReader::new(file)).unwrap();
     sound.set_volume(0.5);
@@ -30,9 +30,7 @@ fn buzz(path_to_audio: &PathBuf, stream_handle: &OutputStreamHandle) -> AudioFil
     Ok(())
 }
 
-fn get_initial_state(
-    sec: u64,
-) -> Result<NaiveTime, Box<dyn std::error::Error + Send + Sync + 'static>> {
+fn get_initial_state(sec: u64) -> Result<NaiveTime, anyhow::Error> {
     let mut sec: u32 = sec.try_into()?;
     let h = sec.div_euclid(3600);
     sec -= h * 3600;
