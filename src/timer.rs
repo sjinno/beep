@@ -1,29 +1,29 @@
-use super::Arguments;
+use super::{Arguments, PathBuf};
 
 use chrono::{Duration as ChronoDuration, NaiveTime};
 use rodio::{self, OutputStreamHandle};
 
 use std::convert::TryInto;
+use std::fs;
 use std::io::{self, Write as IoWrite};
+use std::thread;
 use std::time::Duration;
 
-type AudioFileResult = std::io::Result<()>;
+type AudioFileResult = io::Result<()>;
 
 pub fn begin(args: &Arguments) {
     countdown(args.seconds);
 
     let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
-    match buzz(&stream_handle) {
+    match buzz(&args.path_to_audio, &stream_handle) {
         Ok(buzz) => buzz,
-        Err(_) => println!("No such audio file found."),
+        Err(_) => {}
     }
 }
 
-fn buzz(stream_handle: &OutputStreamHandle) -> AudioFileResult {
-    let file = std::fs::File::open("audio/hahn_kikeriki.mp3")?;
-    let sound = stream_handle
-        .play_once(std::io::BufReader::new(file))
-        .unwrap();
+fn buzz(path_to_audio: &PathBuf, stream_handle: &OutputStreamHandle) -> AudioFileResult {
+    let file = fs::File::open(path_to_audio)?;
+    let sound = stream_handle.play_once(io::BufReader::new(file)).unwrap();
     sound.set_volume(0.5);
     sound.sleep_until_end();
     println!();
@@ -51,7 +51,7 @@ fn countdown(seconds: u64) {
     let dur = Duration::from_secs(1);
     let chrono_dur = ChronoDuration::seconds(1);
     loop {
-        std::thread::sleep(dur);
+        thread::sleep(dur);
         state -= chrono_dur;
         print!("\r{}", state);
         io::stdout().flush().unwrap();
