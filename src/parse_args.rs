@@ -1,10 +1,12 @@
 use super::ParseIntError;
-use std::{env, time::Duration};
+
 use text_colorizer::Colorize;
+
+use std::env;
 
 #[derive(Debug)]
 pub struct Arguments {
-    pub seconds: Duration,
+    pub seconds: u64,
 }
 
 fn print_usage() {
@@ -34,12 +36,10 @@ fn parse_args(args: &[String]) -> Result<Arguments, ParseIntError> {
     } else {
         None
     };
-    let duration_in_secs = if let Some(s) = sec {
+    let secs = if let Some(s) = sec {
         min * 60 + s
     } else {
         min * 60
     };
-    Ok(Arguments {
-        seconds: Duration::from_secs(duration_in_secs),
-    })
+    Ok(Arguments { seconds: secs })
 }
